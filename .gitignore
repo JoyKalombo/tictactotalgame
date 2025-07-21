@@ -1,0 +1,2 @@
+# Ignore the secrets.toml file which contains sensitive information
+.streamlit/secrets.toml
