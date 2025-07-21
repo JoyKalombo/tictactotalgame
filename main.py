@@ -7,7 +7,7 @@ import json
 
 # Firebase setup... initialise firebase admin SDK
 if not firebase_admin._apps:
-    cred = credentials.Certificate(json.loads(st.secrets["firebase_creds"])) # loading credentials from secrets
+    cred = credentials.Certificate(st.secrets["firebase_creds"]) # loading credentials from secrets
     firebase_admin.initialize_app(cred, {
         'databaseURL': st.secrets["firebase"]["db_url"] # Use the db_url from the secrets file
     })
