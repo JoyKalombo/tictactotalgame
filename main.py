@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- Load Firebase credentials ---
-firebase_creds_raw = st.secrets.get("firebase_creds") or os.getenv("FIREBASE_CREDS")
+firebase_creds_raw = st.secrets.get("firebase_creds") or os.getenv("firebase_creds")
 
 if firebase_creds_raw is None:
     raise ValueError("❌ Firebase credentials not found in st.secrets or environment variables")
@@ -25,7 +25,7 @@ if not firebase_admin._apps:
     cred = credentials.Certificate(firebase_creds_dict)
 
     # Use database URL from secrets or environment
-    db_url = st.secrets.get("FIREBASE_DB_URL") or os.getenv("FIREBASE_DB_URL")
+    db_url = st.secrets.get("firebase_db_url") or os.getenv("firebase_db_url")
 
     if not db_url:
         raise ValueError("❌ Firebase DB URL is missing")
