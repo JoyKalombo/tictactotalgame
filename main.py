@@ -6,35 +6,43 @@ import random
 from firebase_admin import credentials, db
 from dotenv import load_dotenv
 
-# --- Initialise Firebase ---
-if not firebase_admin._apps:
-    cred = credentials.Certificate(json.loads(st.secrets["firebase_creds"]))
-    firebase_admin.initialize_app(cred, {
-        'databaseURL': st.secrets["firebase_db_url"]  # Fetch URL from Streamlit secrets
-    })
 
-# Initialize game state
-if 'game_state' not in st.session_state:
-    st.session_state.game_state = {
-        'board': [None] * 9,  # Board starts with None (empty)
-        'current_player': 'Player 1',
-        'player1_numbers': [],
-        'player2_numbers': [],
-        'selected_number': None,
-        'winner': None,
-        'target1': 16,
-        'target2': 14,
-        'used_numbers': set(),
-        'game_mode': 'computer',
-        'room_id': None
-    }
+# --- Firebase Setup ---
+def initialize_firebase():
+    """Initialize Firebase app with credentials from Streamlit secrets."""
+    if not firebase_admin._apps:
+        cred = credentials.Certificate(json.loads(st.secrets["firebase_creds"]))
+        firebase_admin.initialize_app(cred, {
+            'databaseURL': st.secrets["firebase_db_url"]  # Fetch URL from Streamlit secrets
+        })
 
-# Game logic
+
+# --- Game State Initialization ---
+def initialize_game_state():
+    """Initialize game state in session."""
+    if 'game_state' not in st.session_state:
+        st.session_state.game_state = {
+            'board': [None] * 9,  # Empty board
+            'current_player': 'Player 1',
+            'player1_numbers': [],
+            'player2_numbers': [],
+            'selected_number': None,
+            'winner': None,
+            'target1': 16,
+            'target2': 14,
+            'used_numbers': set(),
+            'game_mode': 'computer',
+            'room_id': None
+        }
+
+
+# --- Game Logic ---
 def check_winner(player_numbers, target_sum):
+    """Check if the player has won by making a line of numbers that sum to target_sum."""
     win_conditions = [
         [0, 1, 2], [3, 4, 5], [6, 7, 8],  # Rows
         [0, 3, 6], [1, 4, 7], [2, 5, 8],  # Columns
-        [0, 4, 8], [2, 4, 6]              # Diagonals
+        [0, 4, 8], [2, 4, 6]  # Diagonals
     ]
 
     for condition in win_conditions:
@@ -48,12 +56,14 @@ def check_winner(player_numbers, target_sum):
 
 
 def select_number(number):
+    """Select number for the current player and mark it as used."""
     if number not in st.session_state.game_state['used_numbers']:
         st.session_state.game_state['selected_number'] = number
         st.session_state.game_state['used_numbers'].add(number)
 
 
 def make_move(index):
+    """Make a move by placing the selected number on the board."""
     if st.session_state.game_state['winner']:
         return
 
@@ -76,7 +86,7 @@ def make_move(index):
             st.session_state.game_state['player2_numbers'].append(selected_number)
             st.session_state.game_state['current_player'] = 'Player 1'
 
-        # Check for a winner
+        # Check for a winner after the move
         if check_winner(st.session_state.game_state['player1_numbers'], st.session_state.game_state['target1']):
             st.session_state.game_state['winner'] = 'Player 1 wins'
         elif check_winner(st.session_state.game_state['player2_numbers'], st.session_state.game_state['target2']):
@@ -84,6 +94,7 @@ def make_move(index):
 
 
 def computer_move():
+    """Simulate a computer move by randomly selecting an available spot."""
     available_moves = [
         i for i, val in enumerate(st.session_state.game_state['board']) if val is None
     ]
@@ -106,12 +117,15 @@ def computer_move():
 
 
 def update_firebase_game_state():
+    """Update the game state to Firebase when playing against another player."""
     if st.session_state.game_state['room_id']:
         ref = db.reference(f"games/{st.session_state.game_state['room_id']}")
         ref.set(st.session_state.game_state)
 
 
+# --- UI Functions ---
 def display_board():
+    """Display the game board using Streamlit columns."""
     cols = st.columns(3)
     for i in range(3):
         for j in range(3):
@@ -124,6 +138,7 @@ def display_board():
 
 
 def number_selection():
+    """Allow the player to select a number to place on the board."""
     available_numbers = list(range(1, 10))
     for num in available_numbers:
         if num not in st.session_state.game_state['used_numbers']:
@@ -131,6 +146,7 @@ def number_selection():
 
 
 def reset_game():
+    """Reset the game to its initial state."""
     st.session_state.game_state = {
         'board': [None] * 9,
         'current_player': 'Player 1',
@@ -145,26 +161,34 @@ def reset_game():
         'room_id': None
     }
 
-# Main game loop
-st.title("Tic Tac Total: Player vs Computer")
 
-# Game mode selection
-game_mode = st.selectbox("Select Game Mode:", ["Play Against Computer", "Play Against Player"])
+# --- Main Game Loop ---
+def main():
+    st.title("Tic Tac Total: Player vs Computer")
 
-if game_mode == "Play Against Player":
-    st.session_state.game_state['game_mode'] = 'player'
-    if st.session_state.game_state['room_id'] is None:
-        st.session_state.game_state['room_id'] = f"game_{random.randint(1000, 9999)}"
-    st.write(f"Join room: {st.session_state.game_state['room_id']}")
+    # Game mode selection
+    game_mode = st.selectbox("Select Game Mode:", ["Play Against Computer", "Play Against Player"])
 
-if st.session_state.game_state['winner']:
-    st.write(st.session_state.game_state['winner'])
-    st.button("Reset Game", on_click=reset_game)
-else:
-    st.write(f"Current Player: {st.session_state.game_state['current_player']}")
+    if game_mode == "Play Against Player":
+        st.session_state.game_state['game_mode'] = 'player'
+        if st.session_state.game_state['room_id'] is None:
+            st.session_state.game_state['room_id'] = f"game_{random.randint(1000, 9999)}"
+        st.write(f"Join room: {st.session_state.game_state['room_id']}")
 
-    if st.session_state.game_state['current_player'] == 'Player 1' and not st.session_state.game_state['winner']:
-        st.write("Select a number to place on the board:")
-        number_selection()
+    if st.session_state.game_state['winner']:
+        st.write(st.session_state.game_state['winner'])
+        st.button("Reset Game", on_click=reset_game)
+    else:
+        st.write(f"Current Player: {st.session_state.game_state['current_player']}")
 
-    display_board()
+        if st.session_state.game_state['current_player'] == 'Player 1' and not st.session_state.game_state['winner']:
+            st.write("Select a number to place on the board:")
+            number_selection()
+
+        display_board()
+
+
+if __name__ == "__main__":
+    initialize_firebase()
+    initialize_game_state()
+    main()
