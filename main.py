@@ -5,18 +5,12 @@ from firebase_admin import credentials, db
 import os
 import json
 
-# Firebase setup... initialise firebase admin SDK
+# --- Firebase Initialization ---
 if not firebase_admin._apps:
-    # Load credentials directly from the Streamlit secrets
-    firebase_creds = st.secrets["firebase_creds"]  # This is a string, not a file path
-
-    # Parse the string into a dictionary using json.loads
-    firebase_creds_dict = json.loads(firebase_creds)
-
-    # Initialize Firebase app with the credentials
-    cred = credentials.Certificate(firebase_creds_dict)
+    # Use the credentials string directly from secrets (no json.loads)
+    cred = credentials.Certificate(st.secrets["firebase_creds"])
     firebase_admin.initialize_app(cred, {
-        'databaseURL': st.secrets["firebase"]["db_url"]  # Use the db_url from the secrets file
+        'databaseURL': st.secrets["FIREBASE_DB_URL"]
     })
 
 # Initialize game state
