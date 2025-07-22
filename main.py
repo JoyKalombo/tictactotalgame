@@ -166,6 +166,10 @@ def reset_game():
 def main():
     st.title("Tic Tac Total: Player vs Computer")
 
+    # Display the target totals for each player
+    st.write(f"Player 1's target total: {st.session_state.game_state['target1']}")
+    st.write(f"Player 2's target total: {st.session_state.game_state['target2']}")
+
     # Game mode selection
     game_mode = st.selectbox("Select Game Mode:", ["Play Against Computer", "Play Against Player"])
 
