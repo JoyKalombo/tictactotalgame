@@ -5,33 +5,11 @@ import firebase_admin
 from firebase_admin import credentials, db
 from dotenv import load_dotenv
 
-# --- Load environment variables (for local dev) ---
-load_dotenv()
-
-# --- Load Firebase credentials ---
-firebase_creds_raw = st.secrets.get("firebase_creds") or os.getenv("firebase_creds")
-
-if firebase_creds_raw is None:
-    raise ValueError("❌ Firebase credentials not found in st.secrets or environment variables")
-
-# --- Parse credentials JSON safely ---
-try:
-    firebase_creds_dict = json.loads(firebase_creds_raw)
-except json.JSONDecodeError:
-    raise ValueError("❌ Firebase credentials could not be parsed. Check your formatting.")
-
-# --- Initialise Firebase if not already ---
+# --- Initialise Firebase ---
 if not firebase_admin._apps:
-    cred = credentials.Certificate(firebase_creds_dict)
-
-    # Use database URL from secrets or environment
-    db_url = st.secrets.get("firebase_db_url") or os.getenv("firebase_db_url")
-
-    if not db_url:
-        raise ValueError("❌ Firebase DB URL is missing")
-
+    cred = credentials.Certificate(json.loads(st.secrets["firebase_creds"]))
     firebase_admin.initialize_app(cred, {
-        'databaseURL': db_url
+        'databaseURL': os.getenv("FIREBASE_DB_URL")
     })
 
 # Initialize game state
