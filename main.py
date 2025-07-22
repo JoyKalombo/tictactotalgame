@@ -12,7 +12,18 @@ if not firebase_admin._apps:
     try:
         # Load Firebase credentials from Streamlit secrets.
         # It's crucial that 'firebase_creds' in your Streamlit secrets is a JSON string.
-        # Example: '{"type": "service_account", "project_id": "your-project", ...}'
+        # In your .streamlit/secrets.toml, this should look like:
+        # firebase_creds = """
+        # {
+        #   "type": "service_account",
+        #   "project_id": "your-project-id",
+        #   "private_key_id": "...",
+        #   "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",
+        #   ...
+        # }
+        # """
+        # [firebase]
+        # db_url = "https://your-project-id-default-rtdb.firebaseio.com/"
         firebase_creds_str = st.secrets["firebase_creds"]
         firebase_creds_dict = json.loads(firebase_creds_str)
 
@@ -489,15 +500,7 @@ if not st.session_state.game_state['winner']:
                 elif is_selected:
                     button_class += " number-button-selected"
 
-                st.markdown(
-                    f'<button class="{button_class}" {"disabled" if is_used else ""} '
-                    f'onclick="streamlit.setComponentValue(\'select_number_{num}\', {num});" '
-                    f'id="select_number_{num}">{num}</button>',
-                    unsafe_allow_html=True
-                )
-                # Streamlit's native button does not allow custom JS for setting state directly.
-                # The above markdown is a workaround for visual styling, but the actual click needs a native button or a custom component.
-                # For simplicity with native Streamlit, we'll use a standard button and rely on its callback.
+                # Using Streamlit's native button for functionality
                 if st.button(str(num), key=f"select_{num}",
                              on_click=select_number, args=(num,),
                              disabled=is_used or st.session_state.game_state['winner'] is not None):
