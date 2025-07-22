@@ -13,8 +13,6 @@ if not firebase_admin._apps:
         'databaseURL': st.secrets["firebase_db_url"]  # Fetch URL from Streamlit secrets
     })
 
-    })
-
 # Initialize game state
 if 'game_state' not in st.session_state:
     st.session_state.game_state = {
