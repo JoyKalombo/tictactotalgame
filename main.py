@@ -13,6 +13,14 @@ if not firebase_admin._apps:
         # Load Firebase credentials directly as a JSON string from Streamlit secrets.
         # The 'firebase_creds' key in .streamlit/secrets.toml should contain the full JSON.
         firebase_creds_str = st.secrets["firebase_creds"]
+
+        # IMPORTANT FIX: Replace literal '\n' sequences with actual newline characters.
+        # This is crucial because Streamlit's secrets or your copying process might
+        # have stored the private_key's newlines as '\n' (backslash-n),
+        # but json.loads() expects actual newline characters ('\n') for JSON parsing.
+        # This line ensures the JSON string is correctly formatted before parsing.
+        firebase_creds_str = firebase_creds_str.replace('\\n', '\n')
+
         firebase_creds_dict = json.loads(firebase_creds_str)
 
         # Initialize Firebase app with the credentials and database URL from environment variable.
@@ -25,9 +33,9 @@ if not firebase_admin._apps:
         st.error(
             f"Firebase secret '{e}' not found. Please ensure 'firebase_creds' and 'FIREBASE_DB_URL' are set in your Streamlit secrets.")
         st.stop()  # Stop the app if secrets are missing
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
         st.error(
-            "Error decoding Firebase credentials. Ensure 'firebase_creds' in your Streamlit secrets is a valid JSON string.")
+            f"Error decoding Firebase credentials: {e}. Ensure 'firebase_creds' in your Streamlit secrets is a valid JSON string and private_key newlines are handled correctly.")
         st.stop()  # Stop the app if JSON is invalid
     except Exception as e:
         st.error(f"An unexpected error occurred during Firebase initialization: {e}")
