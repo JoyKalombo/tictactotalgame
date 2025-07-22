@@ -1,17 +1,37 @@
-import random
+import os
+import json
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, db
-import os
-import json
+from dotenv import load_dotenv
 
-# --- Firebase Initialization ---
+# --- Load environment variables (for local dev) ---
+load_dotenv()
+
+# --- Load Firebase credentials ---
+firebase_creds_raw = st.secrets.get("firebase_creds") or os.getenv("FIREBASE_CREDS")
+
+if firebase_creds_raw is None:
+    raise ValueError("❌ Firebase credentials not found in st.secrets or environment variables")
+
+# --- Parse credentials JSON safely ---
+try:
+    firebase_creds_dict = json.loads(firebase_creds_raw)
+except json.JSONDecodeError:
+    raise ValueError("❌ Firebase credentials could not be parsed. Check your formatting.")
+
+# --- Initialise Firebase if not already ---
 if not firebase_admin._apps:
-    # Use the credentials string directly from secrets (no json.loads)
-    firebase_creds_dict = json.loads(st.secrets["firebase_creds"])
     cred = credentials.Certificate(firebase_creds_dict)
+
+    # Use database URL from secrets or environment
+    db_url = st.secrets.get("FIREBASE_DB_URL") or os.getenv("FIREBASE_DB_URL")
+
+    if not db_url:
+        raise ValueError("❌ Firebase DB URL is missing")
+
     firebase_admin.initialize_app(cred, {
-        'databaseURL': st.secrets["FIREBASE_DB_URL"]
+        'databaseURL': db_url
     })
 
 # Initialize game state
