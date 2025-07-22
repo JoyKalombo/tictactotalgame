@@ -8,7 +8,8 @@ import json
 # --- Firebase Initialization ---
 if not firebase_admin._apps:
     # Use the credentials string directly from secrets (no json.loads)
-    cred = credentials.Certificate(st.secrets["firebase_creds"])
+    firebase_creds_dict = json.loads(st.secrets["firebase_creds"])
+    cred = credentials.Certificate(firebase_creds_dict)
     firebase_admin.initialize_app(cred, {
         'databaseURL': st.secrets["FIREBASE_DB_URL"]
     })
