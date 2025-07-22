@@ -3,39 +3,27 @@ import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, db
 import json
-import os
+import os  # Import the os module
 
 # --- Firebase Setup ---
 # Initialize Firebase Admin SDK if it hasn't been initialized yet.
 # This check prevents re-initialization errors in Streamlit.
 if not firebase_admin._apps:
     try:
-        # Load Firebase credentials from Streamlit secrets.
-        # It's crucial that 'firebase_creds' in your Streamlit secrets is a JSON string.
-        # In your .streamlit/secrets.toml, this should look like:
-        # firebase_creds = """
-        # {
-        #   "type": "service_account",
-        #   "project_id": "your-project-id",
-        #   "private_key_id": "...",
-        #   "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",
-        #   ...
-        # }
-        # """
-        # [firebase]
-        # db_url = "https://your-project-id-default-rtdb.firebaseio.com/"
+        # Load Firebase credentials directly as a JSON string from Streamlit secrets.
+        # The 'firebase_creds' key in .streamlit/secrets.toml should contain the full JSON.
         firebase_creds_str = st.secrets["firebase_creds"]
         firebase_creds_dict = json.loads(firebase_creds_str)
 
-        # Initialize Firebase app with the credentials and database URL.
+        # Initialize Firebase app with the credentials and database URL from environment variable.
         cred = credentials.Certificate(firebase_creds_dict)
         firebase_admin.initialize_app(cred, {
-            'databaseURL': st.secrets["firebase"]["db_url"]
+            'databaseURL': os.getenv("FIREBASE_DB_URL")  # Access db_url via os.getenv
         })
         st.success("Firebase initialized successfully!")
     except KeyError as e:
         st.error(
-            f"Firebase secret '{e}' not found. Please ensure 'firebase_creds' and 'firebase.db_url' are set in your Streamlit secrets.")
+            f"Firebase secret '{e}' not found. Please ensure 'firebase_creds' and 'FIREBASE_DB_URL' are set in your Streamlit secrets.")
         st.stop()  # Stop the app if secrets are missing
     except json.JSONDecodeError:
         st.error(
