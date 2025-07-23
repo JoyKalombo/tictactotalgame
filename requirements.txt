@@ -3,5 +3,3 @@ firebase-admin
 dotenv
 requests
 python-dotenv
-openai
-streamlit-autorefresh

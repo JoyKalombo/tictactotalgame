@@ -18,7 +18,8 @@ def initialize_firebase():
         else:
             st.write(f"Firebase Database URL: {db_url}")  # Display URL (for debugging)
 
-        cred = credentials.Certificate(json.loads(st.secrets["firebase_creds"]))
+        # Initialize Firebase using the secret credentials and URL
+        cred = credentials.Certificate(st.secrets["firebase_creds"])
         firebase_admin.initialize_app(cred, {
             'databaseURL': db_url  # Fetch URL from Streamlit secrets
         })
@@ -185,8 +186,15 @@ def main():
 
     if game_mode == "Play Against Player":
         st.session_state.game_state['game_mode'] = 'player'
-        if st.session_state.game_state['room_id'] is None:
-            st.session_state.game_state['room_id'] = f"game_{random.randint(1000, 9999)}"
+
+        # Request room ID from the user
+        room_id = st.text_input("Enter Room ID", "")
+
+        # If room_id is empty, generate one
+        if not room_id:
+            room_id = f"game_{random.randint(1000, 9999)}"
+
+        st.session_state.game_state['room_id'] = room_id
         st.write(f"Join room: {st.session_state.game_state['room_id']}")
 
     if st.session_state.game_state['winner']:
