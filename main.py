@@ -8,12 +8,20 @@ from dotenv import load_dotenv
 
 
 # --- Firebase Setup ---
+# --- Firebase Setup ---
 def initialize_firebase():
     """Initialize Firebase app with credentials from Streamlit secrets."""
     if not firebase_admin._apps:
+        # Debugging: Check if URL is loaded correctly from secrets
+        db_url = st.secrets["firebase_db_url"]
+        if not db_url:
+            st.error("Firebase database URL is not set correctly in Streamlit secrets!")
+        else:
+            st.write(f"Firebase Database URL: {db_url}")  # Display URL (for debugging)
+
         cred = credentials.Certificate(json.loads(st.secrets["firebase_creds"]))
         firebase_admin.initialize_app(cred, {
-            'databaseURL': st.secrets["firebase_db_url"]  # Fetch URL from Streamlit secrets
+            'databaseURL': db_url  # Fetch URL from Streamlit secrets
         })
 
 
