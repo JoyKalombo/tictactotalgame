@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 
 
 # --- Firebase Setup ---
-# --- Firebase Setup ---
 def initialize_firebase():
     """Initialize Firebase app with credentials from Streamlit secrets."""
     if not firebase_admin._apps:
@@ -70,6 +69,16 @@ def select_number(number):
         st.session_state.game_state['used_numbers'].add(number)
 
 
+def update_firebase_game_state():
+    """Update the game state to Firebase when playing against another player."""
+    if st.session_state.game_state['room_id']:
+        st.write(f"Updating Firebase for room: {st.session_state.game_state['room_id']}")
+        ref = db.reference(f"games/{st.session_state.game_state['room_id']}")
+        ref.set(st.session_state.game_state)
+    else:
+        st.write("Error: room_id is None.")
+
+
 def make_move(index):
     """Make a move by placing the selected number on the board."""
     if st.session_state.game_state['winner']:
@@ -122,13 +131,6 @@ def computer_move():
 
         if check_winner(st.session_state.game_state['player2_numbers'], st.session_state.game_state['target2']):
             st.session_state.game_state['winner'] = 'Computer wins'
-
-
-def update_firebase_game_state():
-    """Update the game state to Firebase when playing against another player."""
-    if st.session_state.game_state['room_id']:
-        ref = db.reference(f"games/{st.session_state.game_state['room_id']}")
-        ref.set(st.session_state.game_state)
 
 
 # --- UI Functions ---
