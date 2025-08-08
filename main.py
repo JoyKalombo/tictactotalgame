@@ -92,21 +92,23 @@ def make_move(index):
     if st.session_state.game_state['board'][index] is None:
         st.session_state.game_state['board'][index] = selected_number
 
+        # Update numbers for each player
         if current_player == 'Player 1':
             st.session_state.game_state['player1_numbers'].append(selected_number)
             st.session_state.game_state['current_player'] = 'Player 2'
-
-            # Check if Player 1 has won
-            if check_winner(st.session_state.game_state['player1_numbers'], st.session_state.game_state['target1']):
-                st.session_state.game_state['winner'] = 'Player 1 wins'
         else:
             st.session_state.game_state['player2_numbers'].append(selected_number)
             st.session_state.game_state['current_player'] = 'Player 1'
 
-            # Check if Player 2 has won
-            if check_winner(st.session_state.game_state['player2_numbers'], st.session_state.game_state['target2']):
-                st.session_state.game_state['winner'] = 'Player 2 wins'
+        # Check for a winner after the move
+        if check_winner(st.session_state.game_state['player1_numbers'], st.session_state.game_state['target1']):
+            st.session_state.game_state['winner'] = 'Player 1 wins'
+        elif check_winner(st.session_state.game_state['player2_numbers'], st.session_state.game_state['target2']):
+            st.session_state.game_state['winner'] = 'Player 2 wins'
 
+        # After a move, update Firebase if in multiplayer mode
+        if st.session_state.game_state['game_mode'] == 'player':
+            update_firebase_game_state()
 
 
 def computer_move():
@@ -151,7 +153,13 @@ def number_selection():
     available_numbers = list(range(1, 10))
     for num in available_numbers:
         if num not in st.session_state.game_state['used_numbers']:
-            st.button(str(num), key=f"select_{num}", on_click=select_number, args=(num,))
+            # Only show number selection for the current player
+            if st.session_state.game_state['current_player'] == 'Player 1' and st.session_state.game_state[
+                'winner'] is None:
+                st.button(f"Player 1: {num}", key=f"select_{num}", on_click=select_number, args=(num,))
+            elif st.session_state.game_state['current_player'] == 'Player 2' and st.session_state.game_state[
+                'winner'] is None:
+                st.button(f"Player 2: {num}", key=f"select_{num}", on_click=select_number, args=(num,))
 
 
 def reset_game():
@@ -193,12 +201,11 @@ def main():
         st.button("Reset Game", on_click=reset_game)
     else:
         st.write(f"Current Player: {st.session_state.game_state['current_player']}")
+        # Only show number selection when there isn't a winner
+        number_selection()
 
-        if st.session_state.game_state['current_player'] == 'Player 1' and not st.session_state.game_state['winner']:
-            st.write("Select a number to place on the board:")
-            number_selection()
-
-        display_board()
+    # Display the game board
+    display_board()
 
 
 if __name__ == "__main__":
