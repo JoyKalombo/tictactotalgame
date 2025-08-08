@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 def initialize_firebase():
     """Initialize Firebase app with credentials from Streamlit secrets."""
     if not firebase_admin._apps:
-        # Debugging: Check if URL is loaded correctly from secrets
         db_url = st.secrets["firebase_db_url"]
         if not db_url:
             st.error("Firebase database URL is not set correctly in Streamlit secrets!")
@@ -53,12 +52,10 @@ def check_winner(player_numbers, target_sum):
     ]
 
     for condition in win_conditions:
-        # Collect numbers in the current win condition
         line_numbers = [
             st.session_state.game_state['board'][i] for i in condition
             if st.session_state.game_state['board'][i] in player_numbers
         ]
-        # Check if the sum of the line's selected numbers equals the target sum
         if len(line_numbers) == 3 and sum(line_numbers) == target_sum:
             return True
     return False
@@ -84,7 +81,7 @@ def update_firebase_game_state():
 def make_move(index):
     """Make a move by placing the selected number on the board."""
     if st.session_state.game_state['winner']:
-        return
+        return  # Stop if there's already a winner
 
     selected_number = st.session_state.game_state['selected_number']
     current_player = st.session_state.game_state['current_player']
@@ -153,12 +150,9 @@ def number_selection():
     available_numbers = list(range(1, 10))
     for num in available_numbers:
         if num not in st.session_state.game_state['used_numbers']:
-            # Only show number selection for the current player
-            if st.session_state.game_state['current_player'] == 'Player 1' and st.session_state.game_state[
-                'winner'] is None:
+            if st.session_state.game_state['current_player'] == 'Player 1' and not st.session_state.game_state['winner']:
                 st.button(f"Player 1: {num}", key=f"select_{num}", on_click=select_number, args=(num,))
-            elif st.session_state.game_state['current_player'] == 'Player 2' and st.session_state.game_state[
-                'winner'] is None:
+            elif st.session_state.game_state['current_player'] == 'Player 2' and not st.session_state.game_state['winner']:
                 st.button(f"Player 2: {num}", key=f"select_{num}", on_click=select_number, args=(num,))
 
 
@@ -201,10 +195,8 @@ def main():
         st.button("Reset Game", on_click=reset_game)
     else:
         st.write(f"Current Player: {st.session_state.game_state['current_player']}")
-        # Only show number selection when there isn't a winner
         number_selection()
 
-    # Display the game board
     display_board()
 
 
