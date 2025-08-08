@@ -45,7 +45,7 @@ def initialize_game_state():
 
 # --- Game Logic ---
 def check_winner(player_numbers, target_sum):
-    """Check if the player has won by making a line of numbers that sum to target_sum."""
+    """Check if the player has a winning sum of selected numbers."""
     win_conditions = [
         [0, 1, 2], [3, 4, 5], [6, 7, 8],  # Rows
         [0, 3, 6], [1, 4, 7], [2, 5, 8],  # Columns
@@ -53,10 +53,12 @@ def check_winner(player_numbers, target_sum):
     ]
 
     for condition in win_conditions:
+        # Collect numbers in the current win condition
         line_numbers = [
             st.session_state.game_state['board'][i] for i in condition
             if st.session_state.game_state['board'][i] in player_numbers
         ]
+        # Check if the sum of the line's selected numbers equals the target sum
         if len(line_numbers) == 3 and sum(line_numbers) == target_sum:
             return True
     return False
@@ -94,20 +96,17 @@ def make_move(index):
             st.session_state.game_state['player1_numbers'].append(selected_number)
             st.session_state.game_state['current_player'] = 'Player 2'
 
-            if st.session_state.game_state['game_mode'] == 'player':
-                update_firebase_game_state()
-            else:
-                if not st.session_state.game_state['winner']:
-                    computer_move()
+            # Check if Player 1 has won
+            if check_winner(st.session_state.game_state['player1_numbers'], st.session_state.game_state['target1']):
+                st.session_state.game_state['winner'] = 'Player 1 wins'
         else:
             st.session_state.game_state['player2_numbers'].append(selected_number)
             st.session_state.game_state['current_player'] = 'Player 1'
 
-        # Check for a winner after the move
-        if check_winner(st.session_state.game_state['player1_numbers'], st.session_state.game_state['target1']):
-            st.session_state.game_state['winner'] = 'Player 1 wins'
-        elif check_winner(st.session_state.game_state['player2_numbers'], st.session_state.game_state['target2']):
-            st.session_state.game_state['winner'] = 'Player 2 wins'
+            # Check if Player 2 has won
+            if check_winner(st.session_state.game_state['player2_numbers'], st.session_state.game_state['target2']):
+                st.session_state.game_state['winner'] = 'Player 2 wins'
+
 
 
 def computer_move():
